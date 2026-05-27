@@ -1,6 +1,5 @@
 use std::io::{Read, Write};
 use std::net::TcpListener;
-use std::process::Command;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -69,10 +68,11 @@ fn scan_fonts_linux() -> Result<Vec<FontInfo>, String> {
 
 #[cfg(target_os = "macos")]
 fn scan_fonts_macos() -> Result<Vec<FontInfo>, String> {
+    let home_fonts = format!("{}/Library/Fonts", std::env::var("HOME").unwrap_or_default());
     let dirs = vec![
         "/Library/Fonts",
         "/System/Library/Fonts",
-        &format!("{}/Library/Fonts", std::env::var("HOME").unwrap_or_default()),
+        &home_fonts,
     ];
 
     let mut fonts = Vec::new();
