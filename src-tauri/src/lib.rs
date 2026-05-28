@@ -1,5 +1,7 @@
 use std::io::{Read, Write};
 use std::net::TcpListener;
+#[cfg(target_os = "linux")]
+use std::process::Command;
 use serde::Serialize;
 
 #[derive(Serialize)]
