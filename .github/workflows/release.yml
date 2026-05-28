@@ -40,16 +40,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install dependencies (Ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04'
+      - name: Install dependencies (Ubuntu x86_64)
+        if: matrix.platform == 'ubuntu-22.04' && matrix.target == 'x86_64-unknown-linux-gnu'
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-      - name: Install cross-compilation tools (Linux ARM64)
+      - name: Install cross-compilation dependencies (Ubuntu ARM64)
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: |
-          sudo apt-get install -y gcc-aarch64-linux-gnu
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu patchelf
+          sudo dpkg --add-architecture arm64
+          sudo sed -i 's/deb http/deb [arch=amd64,arm64] http/' /etc/apt/sources.list
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev:arm64 \
+            libappindicator3-dev:arm64 \
+            librsvg2-dev:arm64 \
+            libgtk-3-dev:arm64 \
+            libglib2.0-dev:arm64 \
+            libsoup-3.0-dev:arm64 \
+            libjavascriptcoregtk-4.1-dev:arm64
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -74,6 +86,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+          PKG_CONFIG_ALLOW_CROSS: 1
+          PKG_CONFIG_LIBDIR: /usr/lib/aarch64-linux-gnu/pkgconfig:/usr/share/pkgconfig
+          PKG_CONFIG_SYSROOT_DIR: /
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "WebDeck ${{ github.ref_name }}"
